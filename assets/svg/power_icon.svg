@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+<!-- 전투력 아이콘: 1) 고리 전체 + 번개 전체를 그리고 2) 번개 둘레 틈만큼 고리를 지움 -->
+<defs>
+  <path id="bolt" d="M165.6,25.6 L131.7,110.2 L190.0,126.5 L90.4,230.4 L124.3,145.8 L66.0,129.5 Z"/>
+  <mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="256" height="256">
+    <rect width="256" height="256" fill="#fff"/>
+    <use href="#bolt" fill="#000" stroke="#000" stroke-width="12" stroke-linejoin="miter" stroke-miterlimit="8"/>
+  </mask>
+</defs>
+<circle cx="128" cy="128" r="61.9" fill="none" stroke="#fff" stroke-width="16.3" mask="url(#cut)"/>
+<use href="#bolt" fill="#fff"/>
+</svg>

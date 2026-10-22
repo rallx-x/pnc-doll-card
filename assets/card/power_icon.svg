@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <mask id="cut">
+      <rect width="256" height="256" fill="#fff"/>
+      <!-- 번개 둘레를 띄워서 고리를 끊어냄 -->
+      <polygon points="174.5,2 53.6,111.3 115.6,121.8 78.4,239.6 199.3,115.6 134.2,100.1" fill="#000" stroke="#000" stroke-width="16" stroke-linejoin="round"/>
+    </mask>
+  </defs>
+  <!-- 고리: 번개가 지나가는 자리만 끊김 -->
+  <circle cx="121" cy="124" r="67" fill="none" stroke="#fff" stroke-width="11" mask="url(#cut)"/>
+  <!-- 번개 -->
+  <polygon points="174.5,2 53.6,111.3 115.6,121.8 78.4,239.6 199.3,115.6 134.2,100.1" fill="#fff" stroke="#fff" stroke-width="3" stroke-linejoin="round"/>
+</svg>

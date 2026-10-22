@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 -9 274 458" width="274" height="458">
+  <!-- 서약 카드 1층: 카드를 바로 감싸는 흰색 직사각형 테두리 (굵기 5, 크림 띠와 같음) -->
+  <defs>
+    <linearGradient id="w" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#e9eaec"/></linearGradient>
+    <filter id="s" x="-3%" y="-3%" width="106%" height="106%"><feDropShadow dx="0" dy=".4" stdDeviation=".6" flood-color="#1c1e22" flood-opacity=".35"/></filter>
+  </defs>
+  <path fill-rule="evenodd" fill="url(#w)" stroke="#c4c6c9" stroke-width=".4" filter="url(#s)"
+        d="M-4.5,-4.5 H260.5 V444.5 H-4.5 Z M0.5,0.5 V439.5 H255.5 V0.5 Z"/>
+</svg>

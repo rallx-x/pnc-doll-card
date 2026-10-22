@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 238.5 415" width="238.5" height="415">
+<!-- 카드 그림 영역 모양: 둥근 네모 전체에서 위쪽 가운데 홈만 지움 -->
+<defs><mask id="k" maskUnits="userSpaceOnUse" x="0" y="0" width="238.5" height="415"><rect width="238.5" height="415" fill="#fff"/>
+<rect x="93.8" y="8.8" width="50.4" height="6.2" rx="3.1" fill="#000"/></mask></defs>
+<rect width="238.5" height="415" rx="4" fill="#fff" mask="url(#k)"/>
+</svg>

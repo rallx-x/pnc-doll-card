@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 269 440" width="269" height="440">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6eed6"/><stop offset=".5" stop-color="#efe2c6"/><stop offset="1" stop-color="#e6d6b8"/>
+    </linearGradient>
+    <linearGradient id="silver" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cfd0d2"/>
+    </linearGradient>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="0.6" stdDeviation="1" flood-color="#2a2620" flood-opacity=".35"/>
+    </filter>
+    <g id="bracket">
+      <!-- 모서리 뒤 은색 꺾쇠 -->
+      <path d="M9.5,27 V9.5 H27" fill="none" stroke="url(#silver)" stroke-width="4" stroke-linejoin="miter"/>
+      <rect x="11.5" y="11.5" width="11" height="11" fill="none" stroke="#b9b6b0" stroke-width=".8"/>
+    </g>
+  </defs>
+  <g id="frame" filter="url(#sh)">
+    <use href="#bracket"/>
+    <use href="#bracket" transform="translate(269 0) scale(-1 1)"/>
+    <use href="#bracket" transform="translate(0 440) scale(1 -1)"/>
+    <use href="#bracket" transform="translate(269 440) scale(-1 -1)"/>
+    <!-- 금색 띠 (모서리는 안으로 파인 곡선) -->
+    <path d="M27,7.5 H242 A19 19 0 0 0 261,26.5 V413.5 A19 19 0 0 0 242,432.5 H27 A19 19 0 0 0 8,413.5 V26.5 A19 19 0 0 0 27,7.5 Z"
+          fill="none" stroke="url(#gold)" stroke-width="5"/>
+    <!-- 띠 안쪽 얇은 그늘선 -->
+    <path d="M27.5,10.5 H241.5 A16 16 0 0 0 258,26.5 V413.5 A16 16 0 0 0 241.5,429.5 H27.5 A16 16 0 0 0 11,413.5 V26.5 A16 16 0 0 0 27.5,10.5 Z"
+          fill="none" stroke="#b8a68c" stroke-width=".7" opacity=".8"/>
+    <!-- 위쪽 장식: 선 + 양끝 점 + 마름모 3개 -->
+    <g fill="#f3e9cf" stroke="#a8977b" stroke-width=".5">
+      <line x1="45" y1="17" x2="224" y2="17" stroke="#efe3c7" stroke-width="1.6"/>
+      <circle cx="45" cy="17" r="2.3"/><circle cx="224" cy="17" r="2.3"/>
+      <path d="M121,12.6 l4.2,4.4 -4.2,4.4 -4.2,-4.4z"/>
+      <path d="M134.5,11.5 l5.2,5.5 -5.2,5.5 -5.2,-5.5z"/>
+      <path d="M148,12.6 l4.2,4.4 -4.2,4.4 -4.2,-4.4z"/>
+    </g>
+    <!-- 아래쪽 장식: 선 + 마름모 3개 (가운데 큼) -->
+    <g fill="#f3e9cf" stroke="#a8977b" stroke-width=".5">
+      <line x1="37" y1="416.5" x2="232" y2="416.5" stroke="#efe3c7" stroke-width="1.6"/>
+      <path d="M90.5,412 l4.3,4.5 -4.3,4.5 -4.3,-4.5z"/>
+      <path d="M134.5,410 l6,6.5 -6,6.5 -6,-6.5z"/>
+      <path d="M178.5,412 l4.3,4.5 -4.3,4.5 -4.3,-4.5z"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-9 -9 274 458" width="274" height="458">
+  <!-- 서약 카드 2층: 크림색 테두리 (모서리는 안으로 파인 곡선). 흰 테두리보다 살짝 크게 얹힘 (띠 가운데 선 = 카드 바깥 4) -->
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f6eed6"/><stop offset=".5" stop-color="#efe2c6"/><stop offset="1" stop-color="#e6d6b8"/>
+    </linearGradient>
+    <filter id="band" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="0.8" stdDeviation="1.1" flood-color="#2a2620" flood-opacity=".45"/>
+    </filter>
+    <filter id="sh" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="0" dy="0.6" stdDeviation="1" flood-color="#2a2620" flood-opacity=".35"/>
+    </filter>
+  </defs>
+  <path d="M15,-4 H241 A19 19 0 0 0 260,15 V425 A19 19 0 0 0 241,444 H15 A19 19 0 0 0 -4,425 V15 A19 19 0 0 0 15,-4 Z"
+        fill="none" stroke="url(#gold)" stroke-width="5" filter="url(#band)"/>
+  <g filter="url(#sh)">
+    <g fill="#f3e9cf">
+      <line x1="38.4" y1="9.5" x2="109.1" y2="9.5" stroke="#efe3c7" stroke-width="1.2"/>
+      <line x1="146.9" y1="9.5" x2="217.6" y2="9.5" stroke="#efe3c7" stroke-width="1.2"/>
+      <path d="M36.4,6.8 l2.7,2.7 -2.7,2.7 -2.7,-2.7z"/><path d="M219.6,6.8 l2.7,2.7 -2.7,2.7 -2.7,-2.7z"/>
+      <path d="M111.6,4.5 l4.9,5 -4.9,5 -4.9,-5z"/>
+      <path d="M128,4.5 l4.9,5 -4.9,5 -4.9,-5z"/>
+      <path d="M144.4,4.5 l4.9,5 -4.9,5 -4.9,-5z"/>
+    </g>
+    <g fill="#f3e9cf">
+      <line x1="28.2" y1="430.5" x2="227.8" y2="430.5" stroke="#efe3c7" stroke-width="1.65"/>
+      <path d="M82.9,425.8 l4.4,4.7 -4.4,4.7 -4.4,-4.7z"/>
+      <path d="M128,423.7 l6.1,6.8 -6.1,6.8 -6.1,-6.8z"/>
+      <path d="M173.1,425.8 l4.4,4.7 -4.4,4.7 -4.4,-4.7z"/>
+    </g>
+  </g>
+</svg>

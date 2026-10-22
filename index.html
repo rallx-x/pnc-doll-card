@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>소녀전선: 뉴럴 클라우드 인형증</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* 카드 글꼴 (OFL 무료 글꼴, assets/fonts) */
+@font-face{font-family:"Do Hyeon";src:url("assets/fonts/DoHyeon-Regular.ttf") format("truetype");font-display:swap}
+@font-face{font-family:"Share Tech Mono";src:url("assets/fonts/ShareTechMono-Regular.ttf") format("truetype");font-display:swap}
+
+/* ===== 사이트 테마 3가지 (저장 이미지에는 영향 없음) ===== */
+:root{
+  --accent:#f39a1e; --accent-ink:#1b1206; --gold:#e6cf9a;
+  --bg:#121316; --panel:#1b1d22; --panel2:#24272d; --line:#2e3138; --fg:#e9e7e3; --muted:#9b9ea6; --hover:#262930;
+  --ui:"Noto Sans KR",system-ui,sans-serif; --mono:"Share Tech Mono",ui-monospace,monospace;
+  color-scheme:dark;
+}
+:root[data-theme="grey"]{--bg:#393c43;--panel:#43464e;--panel2:#4b4f57;--line:#575b64;--fg:#f0efed;--muted:#bcbfc6;--hover:#4d5059;color-scheme:dark}
+:root[data-theme="light"]{--bg:#e7e8ea;--panel:#f5f5f6;--panel2:#ebecee;--line:#c9ccd1;--fg:#22252a;--muted:#5f636b;--hover:#e1e2e5;color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:14px;-webkit-text-size-adjust:100%}
+.top{display:flex;align-items:center;gap:10px 14px;flex-wrap:wrap;max-width:1500px;margin:0 auto;padding-block:16px 6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.top .brand{display:flex;flex-direction:column;gap:6px}
+.top h1{margin:0;font-weight:700;line-height:1.2;display:flex;flex-direction:column}.top h1 .t1{font-size:14px;color:var(--muted);font-weight:500}.top h1 .t2{font-size:22px}
+.top .tag{font-family:var(--mono);letter-spacing:.18em;font-size:12px;color:var(--accent)}
+.top .tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;background:var(--panel);color:var(--muted);border:0;padding:6px 11px;cursor:pointer;min-height:32px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.wrap{max-width:1500px;margin:0 auto;padding-block:10px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start}
+@media (max-width:900px){.wrap{grid-template-columns:1fr}}
+.stage{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+.stage-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;color:var(--muted);font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px}
+@media (max-width:1200px){.grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media (max-width:620px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.slot{position:relative;display:flex;flex-direction:column;gap:6px;touch-action:pan-y}
+.slot .cv{border-radius:10px;outline:2px solid transparent;outline-offset:2px;cursor:pointer}
+.slot canvas{display:block;width:100%;height:auto}
+.slot.sel .cv{outline-color:var(--accent)}
+.slot.sel canvas{cursor:grab;touch-action:none}
+.slot.dragging{opacity:.35}
+.slot.drop-before::before{content:"";position:absolute;left:-7px;top:4%;bottom:12%;width:4px;border-radius:2px;background:var(--accent)}
+.sbar{display:flex;justify-content:center;gap:4px}
+.sbar button{font:inherit;font-size:12px;line-height:1;min-height:28px;padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel2);color:var(--muted);cursor:pointer}
+.sbar button:hover{background:var(--hover);color:var(--fg)}
+.sbar .mv{cursor:grab;touch-action:none;user-select:none}
+.sbar .st[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.add{border:2px dashed var(--line);border-radius:10px;background:transparent;color:var(--muted);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;aspect-ratio:312/496;margin-bottom:34px;cursor:pointer;font:inherit;min-height:120px}
+.add b{font-size:34px;font-weight:400;line-height:1}
+.add:hover{border-color:var(--accent);color:var(--accent)}
+.hint{color:var(--muted);font-size:12px;margin:12px 0 0;line-height:1.7}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:13px;position:sticky;top:12px}
+@media (max-width:900px){.panel{position:static}}
+.panel h2{margin:0;font-size:13px;color:var(--muted);font-weight:500;display:flex;justify-content:space-between;align-items:center;gap:8px}
+label.f{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.inrow{display:flex;gap:6px}
+input[type=text],select{width:100%;min-height:42px;background:var(--bg);border:1px solid var(--line);color:var(--fg);border-radius:6px;padding:8px 10px;font:inherit;font-size:15px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.pick{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px dashed var(--line);border-radius:6px;cursor:pointer;color:var(--fg)}
+.pick:hover{border-color:var(--accent)}
+.vh{position:absolute;opacity:0;width:1px;height:1px}
+.zoomrow{display:flex;gap:8px;align-items:center}
+.zoomrow span{font-family:var(--mono);font-size:12px;color:var(--muted);min-width:44px;text-align:right}
+.toggles{display:flex;gap:18px;flex-wrap:wrap}
+.cm{display:flex;align-items:center;gap:6px}.cm b{font-weight:500;font-size:15px;color:var(--fg)}.cm input{flex:1;min-width:0}
+.tg{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:15px;min-height:36px}
+.tg input{width:20px;height:20px;accent-color:var(--gold)}
+.note{color:var(--muted);font-size:12px}
+.saves{display:flex;flex-direction:column;gap:8px;border-top:1px solid var(--line);padding-top:13px}
+.saves .sub{font-size:12px;color:var(--muted);margin-top:4px}
+button.b{font:inherit;border-radius:6px;min-height:46px;padding:10px 12px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;gap:8px}
+button.b small{color:var(--muted);font-size:11px}
+button.b:hover:not(:disabled){background:var(--hover)}
+button.b.main{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700}
+button.b.main small{color:rgba(27,18,6,.72)}
+button.b:disabled{opacity:.4;cursor:not-allowed}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button.s{font:inherit;font-size:13px;border-radius:6px;min-height:40px;padding:6px 10px;border:1px solid var(--line);background:var(--panel2);color:var(--fg);cursor:pointer;white-space:nowrap}
+button.s:hover:not(:disabled){background:var(--hover)}
+button.s:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,input:focus-visible,select:focus-visible,label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--panel2);color:var(--fg);border:1px solid var(--line);padding:10px 16px;border-radius:8px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;max-width:90vw;z-index:2000}
+.toast.on{opacity:1}
+footer{max-width:1500px;margin:0 auto;padding-block:0 30px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));color:var(--muted);font-size:11px;line-height:1.8}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+
+/* ===== 공지 팝업 (취향픽과 같은 모양, 색은 사이트 테마를 따라감) ===== */
+.pn-modal[hidden]{display:none!important}
+.pn-modal{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px;color:var(--fg)}
+.pn-sheet{background:var(--bg);border:1px solid var(--line);border-radius:8px;width:min(560px,100%);max-height:min(86vh,900px);max-height:min(86dvh,900px);display:flex;flex-direction:column;overflow:hidden}
+.pn-head{flex:none;display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px}
+.pn-head h2{margin:0;font-size:16px}
+.pn-x{font:inherit;background:none;border:0;font-size:16px;cursor:pointer;color:var(--muted);padding:4px 8px}
+.pn-langs{flex:none;display:inline-flex;flex-wrap:wrap;align-self:flex-start;margin:4px 16px 12px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.pn-seg{font:inherit;background:var(--panel);color:var(--muted);border:0;padding:7px 14px;cursor:pointer;font-size:14px}
+.pn-seg+.pn-seg{border-left:1px solid var(--line)}
+.pn-seg[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.pn-body{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;margin:0 16px 16px;padding:10px 14px;line-height:1.7;background:var(--panel);border-left:3px solid var(--accent);font-size:12px;color:var(--muted)}
+.pn-body p{margin:0}
+.pn-body hr{border:0;border-top:1px dashed var(--line);margin:10px 0}
+.pn-updates summary{cursor:pointer;color:var(--fg);list-style:none;user-select:none}
+.pn-updates summary::-webkit-details-marker{display:none}
+.pn-updates summary::after{content:" ▾";color:var(--accent)}
+.pn-updates[open] summary::after{content:" ▴"}
+.pn-updates ul{margin:8px 0 0;padding-left:0;list-style:none}
+.pn-updates li{margin:0 0 4px}
+.pn-updates .pn-date{color:var(--accent);margin-right:8px;font-variant-numeric:tabular-nums}
+.pn-foot{flex:none;border-top:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.pn-toggle{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer}
+.pn-toggle input{accent-color:var(--accent);width:16px;height:16px}
+.pn-ok{font:inherit;border-radius:4px;padding:8px 16px;cursor:pointer;font-size:16px;background:var(--accent);border:1px solid var(--accent);color:var(--accent-ink);font-weight:700}
+@media (max-width:560px){.pn-modal{padding:10px}.pn-body{margin:0 10px 10px;padding:8px 10px;font-size:11px;line-height:1.6}.pn-langs{margin:2px 10px 8px}.pn-seg{padding:6px 10px;font-size:12px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <h1><span class="t1" data-i18n="title1">소녀전선: 뉴럴 클라우드</span><span class="t2" data-i18n="title2">인형증 카드</span></h1>
+    <span class="tag">OASIS LOCAL STORAGE ARRAY</span>
+  </div>
+  <div class="tools">
+    <div class="seg" role="group" aria-label="language">
+      <button type="button" data-lang-btn="ko">한국어</button><button type="button" data-lang-btn="en">English</button><button type="button" data-lang-btn="zh">中文</button><button type="button" data-lang-btn="ja">日本語</button>
+    </div>
+    <div class="seg" role="group" data-i18n-aria="theme">
+      <button type="button" data-theme-btn="light" data-i18n="theme_light">밝음</button><button type="button" data-theme-btn="grey" data-i18n="theme_grey">회색</button><button type="button" data-theme-btn="dark" data-i18n="theme_dark">어두움</button>
+    </div>
+    <div class="seg"><button type="button" id="pnOpen" data-i18n="notice">공지</button></div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="stage" data-i18n-aria="stage">
+    <div class="stage-head"><span id="count"></span><span data-i18n="stage_note">즐겨찾기한 카드는 앞쪽에 고정돼요 · 만든 카드는 이 브라우저에 자동 저장돼요</span><button class="s" id="bReset2" type="button" data-i18n="reset">새로 시작</button></div>
+    <div class="grid" id="grid"></div>
+    <p class="hint" data-i18n-html="hint"></p>
+  </section>
+
+  <aside class="panel" data-i18n-aria="edit">
+    <h2><span id="editTitle">카드 편집</span>
+      <span class="inrow"><button class="s" id="bLeft" type="button" data-i18n-aria="prev">◀</button><button class="s" id="bRight" type="button" data-i18n-aria="next">▶</button></span>
+    </h2>
+    <label class="pick" for="fImg" data-i18n="add_image">캐릭터 이미지 넣기</label>
+    <input class="vh" type="file" id="fImg" accept="image/*">
+    <label class="f"><span data-i18n="size">크기</span>
+      <span class="zoomrow"><input type="range" id="fZoom" min="20" max="1000" value="100"><span id="zoomVal">100%</span><button class="s" id="bReset" type="button" data-i18n="reset_zoom">원래대로</button></span>
+    </label>
+    <label class="f"><span data-i18n="name">이름</span> <input type="text" id="fName" maxlength="20" data-i18n-ph="name_ph"></label>
+    <div class="row2">
+      <label class="f"><span data-i18n="cls">직군</span>
+        <select id="fClass">
+          <option value="guard" data-i18n="c_guard">수위</option><option value="sniper" data-i18n="c_sniper">사수</option><option value="warrior" data-i18n="c_warrior">전사</option>
+          <option value="specialist" data-i18n="c_specialist">해결사</option><option value="medic" data-i18n="c_medic">치료사</option><option value="heart" data-i18n="c_heart">하트</option>
+        </select>
+      </label>
+      <label class="f"><span data-i18n="company">기업</span>
+        <select id="fCompany">
+          <option value="42lab">42LAB</option><option value="svarog" data-i18n="co_svarog">스바로그</option><option value="ultilife" data-i18n="co_ultilife">얼티라이프</option>
+          <option value="uas">UAS</option><option value="entropy" data-i18n="co_entropy">엔트로피</option><option value="cybermedia" data-i18n="co_cybermedia">사이버미디어</option>
+          <option value="alternatives" data-i18n="co_alternatives">얼터너티브</option><option value="purifier" data-i18n="co_purifier">정화자</option><option value="" data-i18n="none">없음</option>
+        </select>
+      </label>
+    </div>
+    <div class="row2">
+      <label class="f"><span data-i18n="power">전투력</span>
+        <span class="inrow"><input type="text" id="fPower" inputmode="numeric" maxlength="6" autocomplete="off"><button class="s" id="bRand" type="button" data-i18n="random">랜덤</button></span>
+      </label>
+      <label class="f"><span data-i18n="engrave">무장각인</span>
+        <select id="fEngrave"><option value="-1" data-i18n="none">없음</option><option value="0">0</option><option value="1">I</option><option value="2">II</option><option value="3">III</option></select>
+      </label>
+    </div>
+    <div class="toggles">
+      <label class="tg"><input type="checkbox" id="fOath"> <span data-i18n="oath">서약</span></label>
+      <label class="tg"><input type="checkbox" id="fFav"> <span data-i18n="fav">즐겨찾기</span></label>
+    </div>
+    <label class="f"><span data-i18n="comm">커미션 표기</span> <span class="cm"><b>©</b><input type="text" id="fComm" maxlength="40" data-i18n-ph="comm_ph"></span></label>
+    <p class="note" data-i18n="spec_note">최고 스펙을 기준으로 제작되었습니다.</p>
+
+    <div class="saves">
+      <button class="b" id="bOne" type="button"><span data-i18n="save_one">개별 저장</span> <small data-i18n="save_one_sub">선택한 카드 · PNG</small></button>
+      <button class="b" id="bZip" type="button"><span data-i18n="save_zip">개별 전부 저장</span> <small data-i18n="save_zip_sub">카드마다 따로 · ZIP</small></button>
+      <button class="b main" id="bList" type="button"><span data-i18n="save_list">나열 저장</span> <small id="listInfo">2장부터</small></button>
+      <button class="b" id="bHead" type="button"><span data-i18n="save_head">헤더 저장</span> <small id="headInfo">3:1 · 1줄만</small></button>
+      <span class="sub" data-i18n="anim">움직이는 저장 (서약 카드)</span>
+      <div class="duo"><button class="s" id="bGif" type="button">GIF</button><button class="s" id="bMp4" type="button">MP4</button></div>
+    </div>
+  </aside>
+</main>
+<footer id="credit"></footer>
+<div class="toast" id="toast" role="status"></div>
+
+<!-- 공지 창 -->
+<div class="pn-modal" id="pnPop" hidden>
+  <div class="pn-sheet" role="dialog" aria-modal="true" aria-labelledby="pnTitle">
+    <div class="pn-head"><h2 id="pnTitle">공지</h2><button class="pn-x" id="pnClose" type="button" aria-label="닫기">✕</button></div>
+    <div class="pn-langs" role="group" aria-label="language">
+      <button type="button" class="pn-seg" data-lang="ko">한국어</button><button type="button" class="pn-seg" data-lang="en">English</button><button type="button" class="pn-seg" data-lang="zh">中文</button><button type="button" class="pn-seg" data-lang="ja">日本語</button>
+    </div>
+    <div class="pn-body" id="pnBody"></div>
+    <div class="pn-foot">
+      <label class="pn-toggle"><input type="checkbox" id="pnHide"><span id="pnHideLabel">다음부터 보지 않기</span></label>
+      <button class="pn-ok" id="pnOk" type="button">확인</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ======================================================================
+   설정
+   ====================================================================== */
+// (출처 줄 CREDIT 은 아래 언어 설정에서 만듦)
+const MAX_CARDS = 12;
+const NAME_FONT = '"HYHeadLine-Medium","HY헤드라인M","HYHeadLine M","Do Hyeon",sans-serif';
+const NUM_FONT  = '"Share Tech Mono",monospace';
+
+/* 카드 치수: 기본 카드(플라스틱 판) 256×440, 서약 테두리는 그 바깥에 한 겹 */
+const CW=256, CH=440, PAD=28;
+const FRAME={x:-9,y:-9,w:CW+18,h:CH+18};   // 서약 테두리: 흰 직사각형 테두리 + 크림색 테두리를 카드 위에 케이스처럼 겹침
+const TILE_W=CW+PAD*2, TILE_H=CH+PAD*2;
+const IMG_R={x:9,y:19,w:238.5,h:415};         // 그림 영역 (게임 일반 카드 기준)
+const SCREEN_SCALE=2, EXPORT_SCALE=2;
+const LOOP=2.4;                                // 반짝임 한 바퀴(초) — GIF·MP4 이음새 없이 반복
+
+const A='assets/';
+const SRC={
+  plate:'svg/plate.svg', mask:'svg/card_mask.svg', limit:'svg/limit_on.svg', star:'svg/star.svg',
+  engOn:'svg/engrave_on.svg', engOff:'svg/engrave_off.svg', name:'svg/name_box.svg', nameFav:'svg/name_box_fav.svg',
+  power:'svg/power_icon.svg', oathFrame:'svg/oath_frame.svg', oathWhite:'svg/oath_frame_white.svg', oathBadge:'svg/oath_badge.svg',
+  eng1:'engrave/engrave_1.png', eng2:'engrave/engrave_2.png', eng3:'engrave/engrave_3.png',
+  listBg:'bg/herolist_bg.png', title:'bg/title_oasis_storage.png', code:'bg/code_text.png', squares:'bg/side_squares.png',
+  guard:'class/guard.png', sniper:'class/sniper.png', warrior:'class/warrior.png', specialist:'class/specialist.png', medic:'class/medic.png', heartSvg:'svg/heart.svg',
+  '42lab':'company/42lab.png', svarog:'company/svarog.png', ultilife:'company/ultilife.png', uas:'company/uas.png',
+  entropy:'company/entropy.png', cybermedia:'company/cybermedia.png', alternatives:'company/alternatives.png', purifier:'company/purifier.png'
+};
+const IMG={};
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $=id=>document.getElementById(id);
+function load(src){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(src);i.src=A+src})}
+function off(w,h){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));return c}
+function raster(img,w,h){const c=off(w,h);c.getContext('2d').drawImage(img,0,0,c.width,c.height);return c}   // SVG → 큰 비트맵
+function tint(img,color){const c=off(img.width,img.height),x=c.getContext('2d');x.drawImage(img,0,0);x.globalCompositeOperation='source-in';x.fillStyle=color;x.fillRect(0,0,c.width,c.height);return c}
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath()}
+function rand(seed){let s=seed>>>0||1;return()=>((s=(s*1664525+1013904223)>>>0)/4294967296)}
+
+/* ======================================================================
+   사이트 언어 (한국어 / English / 中文 / 日本語) — 공지 창 언어와 함께 바뀜
+   ====================================================================== */
+const I18N={
+ko:{title:'소녀전선: 뉴럴 클라우드 인형증',title1:'소녀전선: 뉴럴 클라우드',title2:'인형증 카드',theme:'화면 테마',theme_light:'밝음',theme_grey:'회색',theme_dark:'어두움',notice:'공지',stage:'카드 진열대',edit:'카드 편집',prev:'앞으로',next:'뒤로',
+  stage_note:'즐겨찾기한 카드는 앞쪽에 고정돼요 · 만든 카드는 이 브라우저에 자동 저장돼요',reset:'새로 시작',reset_confirm:'한 번 더 누르면 비워요',
+  hint:'카드를 누르면 편집할 수 있어요. 선택한 카드 위에서 끌면 그림이 움직이고, 마우스 휠이나 두 손가락으로 크기를 바꿀 수 있어요.<br>카드 아래 <b>⠿ 이동</b>을 끌면 순서가 바뀌고, <b>★</b>로 즐겨찾기, <b>✕</b>로 지울 수 있어요.',
+  move:'⠿ 이동',move_aria:'끌어서 순서 바꾸기',del_aria:'이 카드 지우기',card_aria:'{name} 카드',edit_title:'카드 편집 · {n}번째',
+  add_image:'캐릭터 이미지 넣기',size:'크기',reset_zoom:'원래대로',name:'이름',name_ph:'한글 사이 - 는 · 로 바뀌어요',
+  cls:'직군',c_guard:'수위',c_sniper:'사수',c_warrior:'전사',c_specialist:'해결사',c_medic:'치료사',c_heart:'하트',
+  company:'기업',co_svarog:'스바로그',co_ultilife:'얼티라이프',co_entropy:'엔트로피',co_cybermedia:'사이버미디어',co_alternatives:'얼터너티브',co_purifier:'정화자',none:'없음',
+  power:'전투력',random:'랜덤',engrave:'무장각인',oath:'서약',fav:'즐겨찾기',comm:'커미션 표기',comm_ph:'그림 권리자 (예: @아이디) · 비워 두면 안 나와요',
+  spec_note:'최고 스펙을 기준으로 제작되었습니다.',save_one:'개별 저장',save_one_sub:'선택한 카드 · PNG',save_zip:'개별 전부 저장',save_zip_sub:'카드마다 따로 · ZIP',save_list:'나열 저장',
+  list_min:'2장부터',list_wide:'16:9 · {r}줄',save_head:'헤더 저장',head_info:'3:1 · 1줄',head_only:'6장 이하일 때만',head_done:'헤더 이미지를 저장했어요',anim:'움직이는 저장 (서약 카드)',anim_only:'서약 카드만 움직이는 저장이 돼요',
+  count:'카드 {n} / {m}장 · {r}줄',add_card:'카드 추가',new_card:'새 카드',default_name:'이름',img_ph:'캐릭터 이미지',min_one:'카드는 최소 1장이 있어야 해요',
+  saved_one:'카드 1장을 저장했어요',zip_fail:'ZIP 도구를 불러오지 못했어요. 새로고침 후 다시 해 주세요',zip_making:'ZIP 만드는 중…',zip_done:'카드 {n}장을 ZIP으로 저장했어요',list_done:'나열 이미지를 저장했어요',
+  gif_making:'GIF 만드는 중… (조금 걸려요)',gif_prog:'GIF 만드는 중… {p}%',gif_done:'GIF를 저장했어요',gif_fail:'GIF를 만들지 못했어요. 인터넷 연결을 확인하고 다시 해 주세요',
+  vid_no:'이 브라우저는 영상 저장을 지원하지 않아요',vid_making:'영상 만드는 중… (약 5초)',mp4_done:'MP4를 저장했어요',webm_done:'이 브라우저는 MP4를 지원하지 않아 WebM으로 저장했어요',cleared:'카드를 모두 비웠어요',
+  footer:'소녀전선: 뉴럴 클라우드 비공식 팬메이드 도구 · 원본 디자인과 소스의 권리는 선본 네트워크와 미카팀에 있습니다.',made_by:'제작',load_fail:'그림을 불러오지 못했어요 ({e}). index.html 옆에 assets 폴더가 있는지 확인해 주세요.'},
+en:{title:"GIRLS' FRONTLINE //:_ NEURAL CLOUD Doll ID",title1:"GIRLS' FRONTLINE //:_ NEURAL CLOUD",title2:'Doll ID Card',theme:'Screen theme',theme_light:'Light',theme_grey:'Grey',theme_dark:'Dark',notice:'Notice',stage:'Card display',edit:'Edit card',prev:'Move left',next:'Move right',
+  stage_note:'Favorited cards stay at the front · Your cards are auto-saved in this browser',reset:'Start over',reset_confirm:'Click again to clear',
+  hint:'Click a card to edit it. Drag on the selected card to move the image; use the mouse wheel or two fingers to resize.<br>Drag <b>⠿ Move</b> under a card to reorder, <b>★</b> to favorite, <b>✕</b> to delete.',
+  move:'⠿ Move',move_aria:'Drag to reorder',del_aria:'Delete this card',card_aria:'{name} card',edit_title:'Edit card · #{n}',
+  add_image:'Add character image',size:'Size',reset_zoom:'Reset',name:'Name',name_ph:'A hyphen between Korean letters becomes ·',
+  cls:'Class',c_guard:'Guard',c_sniper:'Sniper',c_warrior:'Warrior',c_specialist:'Specialist',c_medic:'Medic',c_heart:'Heart',
+  company:'Company',co_svarog:'Svarog',co_ultilife:'Ultilife',co_entropy:'Entropy',co_cybermedia:'Cyber Media',co_alternatives:'Alternatives',co_purifier:'Sanctifiers',none:'None',
+  power:'Power',random:'Random',engrave:'Engraving',oath:'Oath',fav:'Favorite',comm:'Art credit',comm_ph:'Image rights holder (e.g. @id) · hidden if empty',
+  spec_note:'Made at max spec.',save_one:'Save card',save_one_sub:'Selected card · PNG',save_zip:'Save all cards',save_zip_sub:'One file per card · ZIP',save_list:'Save lineup',
+  list_min:'2+ cards',list_wide:'16:9 · {r} row(s)',save_head:'Save header',head_info:'3:1 · 1 row',head_only:'6 cards or fewer only',head_done:'Saved header image',anim:'Animated save (Oath cards)',anim_only:'Only Oath cards can be saved as animation',
+  count:'Cards {n} / {m} · {r} row(s)',add_card:'Add card',new_card:'New card',default_name:'Name',img_ph:'Character image',min_one:'You need at least 1 card',
+  saved_one:'Saved 1 card',zip_fail:"Couldn't load the ZIP tool. Please refresh and try again.",zip_making:'Making ZIP…',zip_done:'Saved {n} cards as ZIP',list_done:'Saved lineup image',
+  gif_making:'Making GIF… (this takes a moment)',gif_prog:'Making GIF… {p}%',gif_done:'Saved GIF',gif_fail:"Couldn't make the GIF. Check your connection and try again.",
+  vid_no:"This browser doesn't support video saving",vid_making:'Recording video… (about 5 s)',mp4_done:'Saved MP4',webm_done:"This browser doesn't support MP4, so it was saved as WebM",cleared:'Cleared all cards',
+  footer:"Unofficial fan-made tool for GIRLS' FRONTLINE: NEURAL CLOUD · Original designs and assets belong to Sunborn Network and MICA Team.",made_by:'Made by',load_fail:"Couldn't load images ({e}). Check that the assets folder is next to index.html."},
+zh:{title:'少女前线: 云图计划 人形证',title1:'少女前线: 云图计划',title2:'人形证卡片',theme:'画面主题',theme_light:'浅色',theme_grey:'灰色',theme_dark:'深色',notice:'公告',stage:'卡片展示区',edit:'编辑卡片',prev:'向前',next:'向后',
+  stage_note:'收藏的卡片固定在前面 · 制作的卡片会自动保存在此浏览器中',reset:'重新开始',reset_confirm:'再按一次即清空',
+  hint:'点击卡片即可编辑。在选中的卡片上拖动可移动图片，用鼠标滚轮或双指可调整大小。<br>拖动卡片下方的 <b>⠿ 移动</b> 可调整顺序，<b>★</b> 收藏，<b>✕</b> 删除。',
+  move:'⠿ 移动',move_aria:'拖动调整顺序',del_aria:'删除这张卡片',card_aria:'{name} 卡片',edit_title:'编辑卡片 · 第{n}张',
+  add_image:'添加角色图片',size:'大小',reset_zoom:'还原',name:'名字',name_ph:'韩文之间的 - 会变成 ·',
+  cls:'职业',c_guard:'守卫',c_sniper:'射手',c_warrior:'战士',c_specialist:'特种',c_medic:'医师',c_heart:'爱心',
+  company:'企业',co_svarog:'Svarog',co_ultilife:'Ultilife',co_entropy:'Entropy',co_cybermedia:'Cyber Media',co_alternatives:'Alternatives',co_purifier:'净化者',none:'无',
+  power:'战斗力',random:'随机',engrave:'武装刻印',oath:'誓约',fav:'收藏',comm:'图片署名',comm_ph:'图片权利人（例: @ID）· 留空则不显示',
+  spec_note:'以最高规格为准制作。',save_one:'单张保存',save_one_sub:'选中的卡片 · PNG',save_zip:'全部单独保存',save_zip_sub:'每张单独 · ZIP',save_list:'排列保存',
+  list_min:'2张起',list_wide:'16:9 · {r} 行',save_head:'横幅保存',head_info:'3:1 · 1行',head_only:'仅限6张以下',head_done:'已保存横幅图片',anim:'动态保存（誓约卡片）',anim_only:'仅誓约卡片可动态保存',
+  count:'卡片 {n} / {m} 张 · {r} 行',add_card:'添加卡片',new_card:'新卡片',default_name:'名字',img_ph:'角色图片',min_one:'至少需要保留1张卡片',
+  saved_one:'已保存1张卡片',zip_fail:'无法加载 ZIP 工具，请刷新后重试',zip_making:'正在生成 ZIP…',zip_done:'已将 {n} 张卡片保存为 ZIP',list_done:'已保存排列图片',
+  gif_making:'正在生成 GIF…（需要一点时间）',gif_prog:'正在生成 GIF… {p}%',gif_done:'已保存 GIF',gif_fail:'无法生成 GIF，请检查网络后重试',
+  vid_no:'此浏览器不支持保存视频',vid_making:'正在录制视频…（约5秒）',mp4_done:'已保存 MP4',webm_done:'此浏览器不支持 MP4，已保存为 WebM',cleared:'已清空所有卡片',
+  footer:'《少女前线: 云图计划》非官方粉丝自制工具 · 原版设计与素材的权利归散爆网络与 MICA Team 所有。',made_by:'制作',load_fail:'无法加载图片（{e}）。请确认 index.html 旁边有 assets 文件夹。'},
+ja:{title:'ドールズフロントライン: ニューラルクラウド 人形証',title1:'ドールズフロントライン: ニューラルクラウド',title2:'人形証カード',theme:'画面テーマ',theme_light:'ライト',theme_grey:'グレー',theme_dark:'ダーク',notice:'お知らせ',stage:'カード一覧',edit:'カード編集',prev:'前へ',next:'後ろへ',
+  stage_note:'お気に入りのカードは前に固定されます · 作ったカードはこのブラウザに自動保存されます',reset:'最初から',reset_confirm:'もう一度押すと消去します',
+  hint:'カードを押すと編集できます。選択したカードの上でドラッグすると画像が動き、マウスホイールや2本指で大きさを変えられます。<br>カード下の <b>⠿ 移動</b> をドラッグで並べ替え、<b>★</b> でお気に入り、<b>✕</b> で削除できます。',
+  move:'⠿ 移動',move_aria:'ドラッグで並べ替え',del_aria:'このカードを削除',card_aria:'{name} のカード',edit_title:'カード編集 · {n}枚目',
+  add_image:'キャラクター画像を入れる',size:'サイズ',reset_zoom:'元に戻す',name:'名前',name_ph:'ハングルの間の - は · に変わります',
+  cls:'クラス',c_guard:'ガード',c_sniper:'スナイパー',c_warrior:'ウォーリア',c_specialist:'スペシャリスト',c_medic:'メディック',c_heart:'ハート',
+  company:'企業',co_svarog:'Svarog',co_ultilife:'Ultilife',co_entropy:'Entropy',co_cybermedia:'Cyber Media',co_alternatives:'Alternatives',co_purifier:'Sanctifiers',none:'なし',
+  power:'戦闘力',random:'ランダム',engrave:'武装刻印',oath:'誓約',fav:'お気に入り',comm:'イラスト表記',comm_ph:'画像の権利者（例: @ID）· 空欄なら表示されません',
+  spec_note:'最高スペックを基準に制作しています。',save_one:'個別保存',save_one_sub:'選択中のカード · PNG',save_zip:'すべて個別保存',save_zip_sub:'カードごと · ZIP',save_list:'並べて保存',
+  list_min:'2枚から',list_wide:'16:9 · {r}行',save_head:'ヘッダー保存',head_info:'3:1 · 1行',head_only:'6枚以下のときのみ',head_done:'ヘッダー画像を保存しました',anim:'動く保存（誓約カード）',anim_only:'動く保存は誓約カードのみです',
+  count:'カード {n} / {m}枚 · {r}行',add_card:'カード追加',new_card:'新しいカード',default_name:'名前',img_ph:'キャラクター画像',min_one:'カードは最低1枚必要です',
+  saved_one:'カードを1枚保存しました',zip_fail:'ZIPツールを読み込めませんでした。再読み込みしてもう一度お試しください',zip_making:'ZIPを作成中…',zip_done:'カード{n}枚をZIPで保存しました',list_done:'並べた画像を保存しました',
+  gif_making:'GIFを作成中…（少し時間がかかります）',gif_prog:'GIFを作成中… {p}%',gif_done:'GIFを保存しました',gif_fail:'GIFを作成できませんでした。接続を確認してもう一度お試しください',
+  vid_no:'このブラウザは動画保存に対応していません',vid_making:'動画を作成中…（約5秒）',mp4_done:'MP4を保存しました',webm_done:'このブラウザはMP4に対応していないため、WebMで保存しました',cleared:'カードをすべて消去しました',
+  footer:'ドールズフロントライン: ニューラルクラウド 非公式ファンメイドツール · 原作デザインと素材の権利は Sunborn Network と MICA Team にあります。',made_by:'制作',load_fail:'画像を読み込めませんでした（{e}）。index.html の隣に assets フォルダがあるか確認してください。'}};
+const LANG_KEY='pnc-card-lang';
+let LANG=(()=>{try{const v=localStorage.getItem(LANG_KEY);if(I18N[v])return v}catch(e){}const l=(navigator.language||'ko').toLowerCase();return l.startsWith('ja')?'ja':l.startsWith('zh')?'zh':l.startsWith('ko')?'ko':'en'})();
+function tr(k,v={}){let s=(I18N[LANG]&&I18N[LANG][k])??I18N.ko[k]??k;for(const [a,b] of Object.entries(v))s=s.split('{'+a+'}').join(b);return s}
+let CREDIT='';
+function applyLang(){
+  document.documentElement.lang=LANG==='zh'?'zh-Hans':LANG;document.title=tr('title');
+  CREDIT=`© Sunborn Network Technology Co., Ltd. / MICA Team | ${tr('made_by')} @BPT2xNoa`;
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=tr(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>el.innerHTML=tr(el.dataset.i18nHtml));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>el.placeholder=tr(el.dataset.i18nPh));
+  document.querySelectorAll('[data-i18n-aria]').forEach(el=>el.setAttribute('aria-label',tr(el.dataset.i18nAria)));
+  document.querySelectorAll('[data-lang-btn]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.langBtn===LANG)));
+  const cr=document.getElementById('credit');if(cr)cr.innerHTML=`${tr('footer')}<br>${CREDIT}`;
+}
+function setLang(l){if(!I18N[l])return;LANG=l;try{localStorage.setItem(LANG_KEY,l)}catch(e){}applyLang();
+  if(typeof build==='function'&&IMG.plateR){build();fill()}
+  if(window.noticeLang)window.noticeLang(l)}
+applyLang();
+document.querySelectorAll('[data-lang-btn]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.langBtn)));
+
+/* ======================================================================
+   카드 데이터 — 배열 순서가 곧 화면·저장 순서 (즐겨찾기 묶음이 항상 앞)
+   ====================================================================== */
+let uid=0;
+function makeSparks(seed){const r=rand(seed);
+  const outer=Array.from({length:5},(_,i)=>({side:i%3,t:r(),ph:r()*6.283,k:1+Math.floor(r()*2),s:.6+r()*.45}));
+  // 아래에서 위로 떠오르는 금가루: 별무리처럼 몇 군데 뭉쳐서 (무리 + 듬성듬성 흩어진 것)
+  const gauss=()=>(r()+r()+r()-1.5)/1.5;
+  const clusters=Array.from({length:4},()=>({cx:30+r()*196,cy:400+r()*30,sx:14+r()*16,sy:8+r()*8,off:r()}));
+  const rise=[];
+  clusters.forEach(c=>{for(let i=0;i<34;i++)rise.push({x:c.cx+gauss()*c.sx,y0:c.cy+gauss()*c.sy,dist:70+r()*120,off:(c.off+r()*.35)%1,k:1,s:r()<.85?.4+r()*.7:1.1+r()*.8,drift:(r()-.5)*12})});
+  for(let i=0;i<40;i++)rise.push({x:14+r()*226,y0:395+r()*40,dist:50+r()*130,off:r(),k:1,s:.35+r()*.8,drift:(r()-.5)*10});
+  const twinkle=Array.from({length:40},()=>({x:12+r()*230,y:360+r()*72,ph:r()*6.283,k:1+Math.floor(r()*3),s:.4+r()*.9})); // 아래쪽 제자리 반짝임
+  const badge=Array.from({length:16},()=>{const a=r()*6.283,d=21+r()*9;return{x:32.75+Math.cos(a)*d,y:93+Math.sin(a)*d*.85,ph:r()*6.283,k:1+Math.floor(r()*3),s:.5+r()*.9}}); // 마크 주변 제자리 반짝
+  return{outer,rise,badge,twinkle};}
+// 새 카드는 직군·무장각인·전투력을 랜덤으로 (하트·없음 포함). 자동 저장에서 불러온 카드는 저장된 값 그대로
+const CLASSES=['guard','sniper','warrior','specialist','medic','heart'],pick=a=>a[Math.floor(Math.random()*a.length)];
+function randPower(){const len=1+Math.floor(Math.random()*6);let v=String(1+Math.floor(Math.random()*9));for(let i=1;i<len;i++)v+=Math.floor(Math.random()*10);return v}
+function newCard(o={}){const id=uid++;return Object.assign({id,img:null,zoom:100,ox:0,oy:0,name:tr('default_name'),cls:pick(CLASSES),company:'42lab',power:randPower(),engrave:pick([-1,0,1,2,3]),oath:false,fav:false,comm:'',fx:makeSparks(id*7919+13)},o)}
+const cards=[newCard({name:'스에',oath:true,fav:true,company:'svarog'}),newCard({name:'페르시카·집도',company:'cybermedia'}),newCard({name:'드 레이시',company:'uas'})];
+let selId=cards[0].id;
+const selCard=()=>cards.find(c=>c.id===selId)||cards[0];
+const favCount=()=>cards.filter(c=>c.fav).length;
+
+/* 순서 규칙: 즐겨찾기끼리/일반끼리만 자리 바꿈. 다른 묶음 쪽에 놓으면 경계 자리로 */
+function moveCard(card,targetIndex){
+  const from=cards.indexOf(card);cards.splice(from,1);
+  const fc=cards.filter(c=>c.fav).length;
+  let t=Math.max(0,Math.min(targetIndex,cards.length));
+  if(card.fav) t=Math.min(t,fc); else t=Math.max(t,fc);
+  cards.splice(t,0,card);
+}
+function setFav(card,on){card.fav=on;const i=cards.indexOf(card);cards.splice(i,1);const fc=cards.filter(c=>c.fav).length;cards.splice(fc,0,card)} // 켜면 즐겨찾기 맨 끝, 끄면 일반 맨 앞
+
+/* ======================================================================
+   카드 그리기 (타일 좌표, 1배 기준)
+   ====================================================================== */
+function sparkAlpha(k,ph,t){return t==null?null:Math.max(0,Math.sin(2*Math.PI*k*t/LOOP+ph))}
+function drawCross(x,cx,cy,size,a){
+  x.save();x.globalAlpha=a;
+  const g=x.createRadialGradient(cx,cy,0,cx,cy,size*.9);g.addColorStop(0,'rgba(255,255,255,.95)');g.addColorStop(.3,'rgba(255,246,222,.5)');g.addColorStop(1,'rgba(255,240,210,0)');
+  x.fillStyle=g;x.beginPath();x.arc(cx,cy,size*.9,0,7);x.fill();
+  const ray=(w,h)=>{x.beginPath();x.moveTo(cx-w,cy);x.quadraticCurveTo(cx,cy-h*.07,cx+w,cy);x.quadraticCurveTo(cx,cy+h*.07,cx-w,cy);x.fill()};
+  x.fillStyle='rgba(255,255,255,.95)';ray(size*2.1,size*1.4);
+  x.save();x.translate(cx,cy);x.rotate(Math.PI/2);x.translate(-cx,-cy);ray(size*1.35,size*1.2);x.restore();
+  x.restore();
+}
+function fitFont(x,text,maxW,size,min,family){let s=size;x.font=`${s}px ${family}`;while(x.measureText(text).width>maxW&&s>min){s-=.5;x.font=`${s}px ${family}`}return s}
+function spaced(x,text,X,Y,sp,align){ // 글자 사이 간격 직접 조절
+  const ws=[...text].map(ch=>x.measureText(ch).width);const total=ws.reduce((a,b)=>a+b,0)+sp*(ws.length-1);
+  let cx=align==='right'?X-total:X;x.textAlign='left';[...text].forEach((ch,i)=>{x.fillText(ch,cx,Y);cx+=ws[i]+sp});
+}
+
+function drawCard(x,d,t,opt={}){
+  x.save();x.translate(PAD,PAD);
+  // 1) 플라스틱 판 (모든 카드 공통)
+  x.drawImage(IMG.plateR,0,0,CW,CH);
+
+  // 2) 그림 영역
+  const R=IMG_R,L=off(R.w*3,R.h*3),lx=L.getContext('2d');lx.scale(3,3);
+  const g=lx.createLinearGradient(0,0,0,R.h);g.addColorStop(0,'#eef0f2');g.addColorStop(.6,'#e0e4e7');g.addColorStop(1,'#c6cacf');
+  lx.fillStyle=g;lx.fillRect(0,0,R.w,R.h);
+  const lg=IMG['t_'+d.company];
+  if(lg){const w=R.w*1.3,h=lg.height*w/lg.width;lx.globalAlpha=.12;lx.drawImage(lg,R.w*.72-w/2,R.h*.3-h/2,w,h);lx.globalAlpha=1}
+  if(d.img){const im=d.img,sc=Math.max(R.w/im.width,R.h/im.height)*d.zoom/100,iw=im.width*sc,ih=im.height*sc;lx.drawImage(im,(R.w-iw)/2+d.ox,(R.h-ih)/2+d.oy,iw,ih)}
+  else if(opt.placeholder!==false){lx.fillStyle='rgba(60,66,74,.4)';lx.font='500 13px "Noto Sans KR",sans-serif';lx.textAlign='center';lx.fillText(tr('img_ph'),R.w/2,R.h*.42)}
+  const sh=lx.createLinearGradient(0,R.h*.55,0,R.h);sh.addColorStop(0,'rgba(10,11,13,0)');sh.addColorStop(1,'rgba(10,11,13,.6)');lx.fillStyle=sh;lx.fillRect(0,R.h*.55,R.w,R.h*.45);
+  if(d.oath){const dk=lx.createLinearGradient(0,R.h*.7,0,R.h);dk.addColorStop(0,'rgba(0,0,0,0)');dk.addColorStop(1,'rgba(0,0,0,.45)');lx.fillStyle=dk;lx.fillRect(0,R.h*.7,R.w,R.h*.3)}
+  lx.globalCompositeOperation='destination-in';lx.drawImage(IMG.maskR,0,0,R.w,R.h);
+  x.drawImage(L,R.x,R.y,R.w,R.h);
+
+  // 3) 주황 막대
+  const by=88,bh=295-88,bx=237.5,bw=11,R2=IMG_R;
+  // 막대: 그림 칸 오른쪽 끝에 딱 붙어 들어간 주황 띠. 위아래 끝은 흐리지 않고 비스듬히 잘림 (오른쪽이 더 김)
+  {const xr=R.x+R.w,sl=2.6;x.fillStyle='#f7931e';x.beginPath();x.moveTo(bx,by+sl);x.lineTo(xr,by);x.lineTo(xr,by+bh);x.lineTo(bx,by+bh-sl);x.closePath();x.fill()}
+  // 그림 칸이 판보다 한 단 파여 들어간 느낌: 안쪽 가장자리를 따라 그림자 (위·왼쪽이 더 진하게)
+  {const P=10,S=3,O=off((R.w+P*2)*S,(R.h+P*2)*S),ox=O.getContext('2d');ox.fillStyle='#000';ox.fillRect(0,0,O.width,O.height);
+   ox.globalCompositeOperation='destination-out';ox.drawImage(IMG.maskR,P*S,P*S,R.w*S,R.h*S);
+   const H=off(O.width,O.height),hx=H.getContext('2d');
+   hx.shadowColor='rgba(0,0,0,.85)';hx.shadowBlur=6*S;hx.shadowOffsetX=1.2*S;hx.shadowOffsetY=2*S;
+   hx.drawImage(O,0,0);
+   hx.globalCompositeOperation='destination-in';hx.drawImage(IMG.maskR,P*S,P*S,R.w*S,R.h*S);
+   x.drawImage(H,R.x-P,R.y-P,R.w+P*2,R.h+P*2);
+   // 파인 턱: 그림 칸 바로 안쪽 얇은 어두운 선 + 판 쪽 아래·오른쪽 가장자리에 얇은 밝은 선
+   x.save();x.lineWidth=.8;x.strokeStyle='rgba(20,22,26,.35)';rr(x,R.x+.4,R.y+.4,R.w-.8,R.h-.8,4);x.stroke();
+   x.strokeStyle='rgba(255,255,255,.7)';x.lineWidth=.7;x.beginPath();x.moveTo(R.x+R.w+.4,R.y+4);x.lineTo(R.x+R.w+.4,R.y+R.h-4);x.arcTo(R.x+R.w+.4,R.y+R.h+.4,R.x+R.w-4,R.y+R.h+.4,4.4);x.lineTo(R.x+4,R.y+R.h+.4);x.stroke();x.restore()}
+
+  // 막대 빛이 오른쪽 플라스틱 판까지 옅은 주황으로 물듦 — 판 모양 밖으로는 안 나감, 위아래 끝은 흐리게
+  {const tx=bx+bw-1.5,ty=by-16,th=bh+32;x.save();rr(x,0,0,CW,CH,7);x.clip();
+   const T=off((CW-tx)*4,th*4),tc=T.getContext('2d');tc.scale(4,4);
+   const hg=tc.createLinearGradient(0,0,CW-tx,0);hg.addColorStop(0,'rgba(255,150,40,.55)');hg.addColorStop(.55,'rgba(255,158,58,.36)');hg.addColorStop(1,'rgba(255,170,80,.16)');
+   tc.fillStyle=hg;tc.fillRect(0,0,CW-tx,th);
+   tc.globalCompositeOperation='destination-out';const fv=tc.createLinearGradient(0,0,0,th);
+   fv.addColorStop(0,'#000');fv.addColorStop(28/th,'rgba(0,0,0,0)');fv.addColorStop(1-28/th,'rgba(0,0,0,0)');fv.addColorStop(1,'#000');tc.fillStyle=fv;tc.fillRect(0,0,CW-tx,th);
+   x.drawImage(T,tx,ty,CW-tx,th);x.restore()}
+  // 판 단차: 맨 바깥 테두리 띠는 한 단 높고 밝게, 안쪽 면과의 경계에 얇은 줄 (모서리는 둥글게)
+  {x.save();x.beginPath();x.roundRect(0,0,CW,CH,7);x.roundRect(3,3,CW-6,CH-6,5);x.fillStyle='rgba(255,255,255,.26)';x.fill('evenodd');
+   x.lineWidth=.7;x.strokeStyle='rgba(70,74,80,.28)';x.beginPath();x.roundRect(3.2,3.2,CW-6.4,CH-6.4,5);x.stroke();
+   x.strokeStyle='rgba(255,255,255,.35)';x.lineWidth=.5;x.beginPath();x.roundRect(3.9,3.9,CW-7.8,CH-7.8,4.5);x.stroke();x.restore()}
+
+  // 4) 직군 아이콘
+  x.fillStyle='rgba(30,32,36,.7)';rr(x,12,22,41.5,41.5,6);x.fill();
+  const ic=IMG[d.cls];if(ic){const s=27/Math.max(ic.width,ic.height);x.drawImage(ic,32.75-ic.width*s/2,42.75-ic.height*s/2,ic.width*s,ic.height*s)}
+
+  // 5) 서약 마크 + 둘레 금가루 바탕
+  if(d.oath){const bw2=40,bh2=bw2*IMG.oathBadge.height/IMG.oathBadge.width,bx2=32.75,by2=93;
+    const RB=34,rgd=x.createRadialGradient(bx2,by2,0,bx2,by2,RB);for(let i=0;i<=12;i++){const t=i/12,e=Math.pow(Math.cos(t*Math.PI/2),2);rgd.addColorStop(t,'rgba(20,18,16,'+(.55*e).toFixed(3)+')')}x.fillStyle=rgd;x.beginPath();x.arc(bx2,by2,RB,0,7);x.fill();   // 경계 없이 부드럽게 사라지는 그림자
+    x.save();x.shadowColor='rgba(255,230,170,.85)';x.shadowBlur=8;x.drawImage(IMG.badgeR,bx2-bw2/2,by2-bh2/2,bw2,bh2);x.restore()}
+
+  // 6) LIMIT UP + 돌파 6칸 (겹치지 않게, 사이에 옅은 세로줄)
+  x.save();x.fillStyle='rgba(66,70,77,.88)';x.font='700 11.5px "Noto Sans KR",sans-serif';x.textAlign='right';x.letterSpacing='0.6px';x.fillText('LIMIT UP',245,33);x.restore();
+  const LW=19.5,c0=128-26/97*LW,cw=(247-c0)/6;   // 첫 아이콘 위쪽 마름모의 왼쪽 꼭짓점 = 위쪽 홈 가운데(카드 정가운데 128)
+  
+  for(let i=0;i<6;i++){const w=LW,h=w*100/97;x.drawImage(IMG.limitR,c0+cw*i,40.7+(17-h)/2,w,h)}
+
+  // 7) 무장각인 (별 위 왼쪽, 크게)
+  const EB=78,eo=(38-32.5)*EB/76;   // 마름모 그림 상자 (마름모 실제 폭 ≈ 54)
+  if(d.engrave>0){x.drawImage(IMG.engOnR,54.5-EB/2,268-EB/2+eo,EB,EB);const n=IMG['eng'+d.engrave],k=40/n.height;x.drawImage(n,54.5-n.width*k/2+3.5*k,268-n.height*k/2+3.5*k,n.width*k,n.height*k)}
+  else if(d.engrave===0) x.drawImage(IMG.engOffR,54.5-EB/2,268-EB/2+eo,EB,EB);   // 0 = 빈 마름모, 없음(-1) = 아무것도 안 그림
+
+  // 8) 별 5개 · 전투력 · 레벨
+  for(let i=0;i<5;i++)x.drawImage(IMG.starR,22+i*22.6,314,26,26);
+  x.drawImage(IMG.powerR,36.4-22.85,359.5-22.85,45.7,45.7);
+  x.save();x.shadowColor='rgba(0,0,0,.3)';x.shadowBlur=1.5;x.fillStyle='#c3c7cd';x.font=`32px ${NUM_FONT}`;spaced(x,String(d.power||''),50.5,371,-2.8,'left');
+  x.fillStyle='#f7931e';x.shadowColor='rgba(0,0,0,.28)';x.font=`86px ${NUM_FONT}`;spaced(x,'70',242,376,-9,'right');x.restore();
+
+  // 9) 이름 칸 + 이름 (이름 칸 아래로 그림이 살짝 보이는 띠)
+  x.drawImage(d.fav?IMG.nameFavR:IMG.nameR,15-6*226/213,383-6*38.5/38,225*226/213,50*38.5/38);   // 이름 칸 양쪽 여백 똑같이 (판 가장자리에서 15씩)
+  x.save();x.textBaseline='middle';x.textAlign='left';fitFont(x,d.name,205,35,12,NAME_FONT);x.lineJoin='round';x.lineWidth=2;x.strokeStyle='rgba(0,0,0,.55)';x.strokeText(d.name,23,403);x.fillStyle='#e6e8eb';x.fillText(d.name,23,403);x.restore();
+  // 8. 서약 카드: 금가루가 이름 칸 위까지 덮이게
+
+
+  // 10) 서약 테두리 (기본 카드 바깥에 한 겹)
+  if(d.oath){x.drawImage(IMG.whiteR,FRAME.x,FRAME.y,FRAME.w,FRAME.h);x.drawImage(IMG.frameR,FRAME.x,FRAME.y,FRAME.w,FRAME.h)}
+  x.restore();
+
+  // 11) 서약 반짝임: 아래 금가루는 위로 증발하듯 떠오르고, 마크 주변은 제자리 반짝, 바깥 십자 빛은 가끔
+  if(d.oath&&opt.sparkle!==false){
+    const tt=t==null?0.35:t,u=tt/LOOP;
+    x.save();x.translate(PAD,PAD);x.fillStyle='#fff3cf';x.shadowColor='#ffd27a';x.shadowBlur=4;
+    d.fx.rise.forEach(p=>{const ph=reduceMotion?.4:(u*p.k+p.off)%1;const a=Math.sin(Math.PI*ph)*(1-ph*.6);if(a<.06)return;
+      x.globalAlpha=a*.9;x.beginPath();x.arc(p.x+p.drift*ph,p.y0-p.dist*ph,p.s*(1-ph*.4),0,7);x.fill()});
+    d.fx.twinkle.forEach(p=>{const a=reduceMotion?.6:Math.max(0,Math.sin(2*Math.PI*p.k*u+p.ph));if(a<.1)return;x.globalAlpha=a*.9;x.beginPath();x.arc(p.x,p.y,p.s,0,7);x.fill()});
+    d.fx.badge.forEach(p=>{const a=reduceMotion?.7:Math.max(0,Math.sin(2*Math.PI*p.k*u+p.ph));if(a<.08)return;
+      x.globalAlpha=a*.95;x.beginPath();x.arc(p.x,p.y,p.s,0,7);x.fill()});
+    x.restore();
+    d.fx.outer.forEach(s=>{const a=reduceMotion?.8:Math.max(0,Math.sin(2*Math.PI*s.k*u+s.ph));if(a<.05)return;
+      const pos=s.side===0?[PAD+CW+2,PAD+24+s.t*120]:s.side===1?[PAD-2,PAD+120+s.t*200]:[PAD+CW+2,PAD+210+s.t*170];drawCross(x,pos[0],pos[1],15*s.s,a)});
+  }
+}
+
+/* ======================================================================
+   화면 (진열대)
+   ====================================================================== */
+const grid=$('grid');let slots=[];
+function build(){
+  grid.innerHTML='';
+  slots=cards.map((d,idx)=>{
+    const s=document.createElement('div');s.className='slot'+(d.id===selId?' sel':'');s.dataset.id=d.id;
+    const cv=document.createElement('div');cv.className='cv';
+    const c=off(TILE_W*SCREEN_SCALE,TILE_H*SCREEN_SCALE);c.setAttribute('aria-label',tr('card_aria',{name:d.name}));cv.append(c);
+    const bar=document.createElement('div');bar.className='sbar';
+    const h=document.createElement('button');h.type='button';h.className='mv';h.textContent=tr('move');h.setAttribute('aria-label',tr('move_aria'));
+    const st=document.createElement('button');st.type='button';st.className='st';st.textContent='★';st.setAttribute('aria-label',tr('fav'));st.setAttribute('aria-pressed',String(d.fav));
+    st.onclick=e=>{e.stopPropagation();setFav(d,!d.fav);selId=d.id;build();fill()};
+    const del=document.createElement('button');del.type='button';del.textContent='✕';del.setAttribute('aria-label',tr('del_aria'));
+    del.onclick=e=>{e.stopPropagation();if(cards.length===1){toast(tr('min_one'));return}cards.splice(cards.indexOf(d),1);if(selId===d.id)selId=cards[Math.min(idx,cards.length-1)].id;build();fill()};
+    bar.append(h,st,del);
+    // 그림 옮기기·크기
+    const pts=new Map();let start=null;const snap=()=>({p:[...pts.values()].map(q=>({...q})),ox:d.ox,oy:d.oy,zoom:d.zoom});
+    c.addEventListener('pointerdown',e=>{if(selId!==d.id){selId=d.id;build();fill();return}c.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});start=snap()});
+    c.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId)||!d.img)return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+      const k=TILE_W/c.getBoundingClientRect().width,p=[...pts.values()];
+      if(p.length===1&&start.p.length===1){d.ox=start.ox+(p[0].x-start.p[0].x)*k;d.oy=start.oy+(p[0].y-start.p[0].y)*k}
+      else if(p.length>=2&&start.p.length>=2){const d0=Math.hypot(start.p[0].x-start.p[1].x,start.p[0].y-start.p[1].y),d1=Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y);setZoom(start.zoom*d1/Math.max(d0,1))}});
+    const end=e=>{pts.delete(e.pointerId);start=snap()};c.addEventListener('pointerup',end);c.addEventListener('pointercancel',end);
+    c.addEventListener('wheel',e=>{if(selId!==d.id||!d.img)return;e.preventDefault();setZoom(d.zoom*Math.pow(1.1,-e.deltaY/100))},{passive:false});
+    // 카드 순서 옮기기 (⠿ 이동 끌기)
+    h.addEventListener('pointerdown',e=>startDrag(e,d,s));
+    s.append(cv,bar);grid.appendChild(s);return{c,d};
+  });
+  if(cards.length<MAX_CARDS){const add=document.createElement('button');add.className='add';add.type='button';add.innerHTML='<b>+</b>'+tr('add_card');
+    add.onclick=()=>{const n=newCard({name:tr('new_card')});cards.push(n);selId=n.id;build();fill()};grid.appendChild(add)}
+  const rows=Math.ceil(cards.length/6);
+  $('count').textContent=tr('count',{n:cards.length,m:MAX_CARDS,r:rows});
+  $('bList').disabled=cards.length<2;$('bZip').disabled=cards.length<2;
+  $('listInfo').textContent=cards.length<2?tr('list_min'):tr('list_wide',{r:rows});
+  $('bHead').disabled=cards.length<2||rows>1;$('headInfo').textContent=cards.length<2?tr('list_min'):(rows>1?tr('head_only'):tr('head_info'));
+}
+let drag=null;
+function startDrag(e,d,el){
+  e.preventDefault();e.stopPropagation();el.classList.add('dragging');drag={d,el,target:null};
+  const move=ev=>{grid.querySelectorAll('.drop-before').forEach(n=>n.classList.remove('drop-before'));
+    const under=document.elementFromPoint(ev.clientX,ev.clientY)?.closest('.slot,.add');drag.target=null;
+    if(!under)return;const slotsEl=[...grid.querySelectorAll('.slot')];
+    if(under.classList.contains('add')){drag.target=cards.length;return}
+    const r=under.getBoundingClientRect(),i=slotsEl.indexOf(under),after=ev.clientX>r.left+r.width/2;
+    drag.target=i+(after?1:0);const mark=slotsEl[drag.target];if(mark&&mark!==el)mark.classList.add('drop-before')};
+  const up=()=>{removeEventListener('pointermove',move);removeEventListener('pointerup',up);removeEventListener('pointercancel',up);
+    el.classList.remove('dragging');if(drag.target!=null){const from=cards.indexOf(d);let t=drag.target;if(t>from)t--;moveCard(d,t)}drag=null;build();fill()};
+  addEventListener('pointermove',move);addEventListener('pointerup',up);addEventListener('pointercancel',up);
+}
+function frame(ts){const t=(ts/1000)%LOOP;slots.forEach(({c,d})=>{const x=c.getContext('2d');x.setTransform(SCREEN_SCALE,0,0,SCREEN_SCALE,0,0);x.clearRect(0,0,TILE_W,TILE_H);drawCard(x,d,t)});requestAnimationFrame(frame)}
+
+/* ======================================================================
+   편집 칸
+   ====================================================================== */
+function setZoom(z){const d=selCard();d.zoom=Math.max(20,Math.min(1000,z));$('fZoom').value=Math.round(d.zoom);$('zoomVal').textContent=Math.round(d.zoom)+'%'}
+function fill(){const d=selCard();$('fName').value=d.name;$('fComm').value=d.comm||'';$('fClass').value=d.cls;$('fCompany').value=d.company;$('fPower').value=d.power;$('fEngrave').value=d.engrave;
+  $('fOath').checked=d.oath;$('fFav').checked=d.fav;setZoom(d.zoom);$('editTitle').textContent=tr('edit_title',{n:cards.indexOf(d)+1});
+  const i=cards.indexOf(d),fc=favCount();$('bLeft').disabled=d.fav?i===0:i===fc;$('bRight').disabled=d.fav?i===fc-1:i===cards.length-1;
+  $('bGif').disabled=$('bMp4').disabled=!d.oath;$('bGif').title=$('bMp4').title=d.oath?'':tr('anim_only')}
+$('fName').addEventListener('input',e=>{const el=e.target,v=el.value.replace(/([가-힣])-(?=[가-힣])/g,'$1·');if(v!==el.value){const p=el.selectionStart;el.value=v;el.setSelectionRange(p,p)}selCard().name=v});
+$('fClass').addEventListener('change',e=>selCard().cls=e.target.value);
+$('fCompany').addEventListener('change',e=>selCard().company=e.target.value);
+$('fPower').addEventListener('input',e=>{const v=e.target.value.replace(/\D/g,'').replace(/^0+/,'').slice(0,6);e.target.value=v;selCard().power=v});
+$('bRand').onclick=()=>{const v=randPower();selCard().power=v;$('fPower').value=v};
+$('fEngrave').addEventListener('change',e=>selCard().engrave=+e.target.value);
+$('fZoom').addEventListener('input',e=>setZoom(+e.target.value));
+$('bReset').onclick=()=>{const d=selCard();d.ox=0;d.oy=0;setZoom(100)};
+$('fComm').addEventListener('input',e=>{selCard().comm=e.target.value});
+$('fOath').addEventListener('change',e=>{selCard().oath=e.target.checked;fill()});
+$('fFav').addEventListener('change',e=>{setFav(selCard(),e.target.checked);build();fill()});
+$('bLeft').onclick=()=>{const d=selCard();moveCard(d,cards.indexOf(d)-1);build();fill()};
+$('bRight').onclick=()=>{const d=selCard();moveCard(d,cards.indexOf(d)+1);build();fill()};
+$('fImg').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{Object.assign(selCard(),{img:im,src:r.result,ox:0,oy:0});setZoom(100)};im.src=r.result};r.readAsDataURL(f);e.target.value=''});
+
+/* ======================================================================
+   저장
+   ====================================================================== */
+function commText(v){v=(v||'').trim();return v?'© '+v:''}
+function cardCanvas(d,scale,t=null,bg=null){ // 개별: 카드 + 아래 투명 여백에 출처 (커미션 표기를 쓰면 한 줄 늘어남)
+  // 출처 글자는 카드(서약이면 테두리) 밑변에서 살짝만 띄워 붙이고, 그 아래로는 잘라냄
+  const cm=commText(d.comm),lines=cm?[cm,CREDIT]:[CREDIT],y0=PAD+CH+(d.oath?17:11),H=y0+(lines.length-1)*12+5,c=off(TILE_W*scale,H*scale),x=c.getContext('2d');x.scale(scale,scale);
+  if(bg){x.fillStyle=bg;x.fillRect(0,0,TILE_W,H)}
+  drawCard(x,d,t,{placeholder:false});
+  x.textAlign='center';x.lineWidth=2.5;x.strokeStyle='rgba(20,22,26,.75)';x.fillStyle='rgba(235,237,240,.95)';
+  lines.forEach((L,i)=>{let f=8.5;x.font=`500 ${f}px "Noto Sans KR",sans-serif`;while(x.measureText(L).width>TILE_W-12&&f>6){f-=.25;x.font=`500 ${f}px "Noto Sans KR",sans-serif`}x.strokeText(L,TILE_W/2,y0+i*12);x.fillText(L,TILE_W/2,y0+i*12)});
+  return c;
+}
+function listCanvas(mode='wide'){
+  // wide  : 16:9 (게임 목록 화면 비율, 위쪽 UI 바는 뺌). 2줄이 꽉 차는 크기로 카드 크기를 정하고, 1줄일 땐 같은 크기로 위쪽에 두어 아래가 조금 남음
+  // header: 3:1 헤더 (1줄 = 6장 이하만)
+  const n=cards.length,rows=Math.ceil(n/6),W=3000,side=110,top=170,bottom=130,GAP=.15*CW;   // 카드 사이 = 카드 폭의 15% (게임과 같음)
+  let H,s;
+  if(mode==='header'){H=W/3;s=Math.min((W-side*2)/(CW*6+GAP*5),(H-top-bottom+20)/CH)}
+  else{H=Math.round(W*9/16);s=Math.min((W-side*2)/(CW*6+GAP*5),(H-top-bottom)/(CH*2+GAP))}
+  const c=off(W,H),x=c.getContext('2d');
+  const bg=IMG.listBg,bs=Math.max(W/bg.width,H/bg.height);x.drawImage(bg,(W-bg.width*bs)/2,(H-bg.height*bs)/2,bg.width*bs,bg.height*bs);
+  x.fillStyle='rgba(205,209,214,.35)';x.fillRect(0,0,W,H);
+  const ts=1.6;x.globalAlpha=.9;x.drawImage(IMG.titleD,70,48,IMG.title.width*ts,IMG.title.height*ts);   // 게임처럼 진하게
+  x.globalAlpha=.8;x.drawImage(IMG.codeD,84,48+IMG.title.height*ts+40,IMG.code.width*1.15,IMG.code.height*1.15);
+  const sq=IMG.squaresD,sqs=1.8,sy=(H-sq.height*sqs)/2;x.globalAlpha=.6;   // 양옆 한 세트씩
+  x.drawImage(sq,26,sy,sq.width*sqs,sq.height*sqs);x.drawImage(sq,W-26-sq.width*sqs,sy,sq.width*sqs,sq.height*sqs);x.globalAlpha=1;
+  const cw=CW*s,ch=CH*s,g=GAP*s,avail=H-top-bottom,blockH=rows*ch+(rows-1)*g;
+  const areaTop=mode==='header'?top+(avail-ch)/2-10:(rows===1?top+(avail-ch)*.3:top+(avail-blockH)/2);   // 1줄(16:9)은 살짝 위로 → 아래가 조금 남음
+  for(let r=0;r<rows;r++){const inRow=Math.min(6,n-r*6),x0=(W-(inRow*cw+(inRow-1)*g))/2;
+    for(let k=0;k<inRow;k++){x.save();x.translate(x0+k*(cw+g)-PAD*s,areaTop+r*(ch+g)-PAD*s);x.scale(s,s);drawCard(x,cards[r*6+k],null,{placeholder:false});x.restore()}}
+  // 출처: 커미션 표기(카드마다 쓴 것을 겹치지 않게 모음) 한 줄 + 선본/제작자 한 줄
+  const cms=[...new Set(cards.map(c=>(c.comm||'').trim()).filter(Boolean))],lines=cms.length?['© '+cms.join(' · '),CREDIT]:[CREDIT];
+  x.textAlign='right';x.fillStyle='rgba(60,64,70,.85)';
+  lines.forEach((L,i)=>{let f=26;x.font=`500 ${f}px "Noto Sans KR",sans-serif`;while(x.measureText(L).width>W-140&&f>12){f-=1;x.font=`500 ${f}px "Noto Sans KR",sans-serif`}x.fillText(L,W-70,H-40-(lines.length-1-i)*36)});
+  return c;
+}
+function download(blob,name){const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000)}
+const toBlob=c=>new Promise(ok=>c.toBlob(ok,'image/png'));
+const safe=s=>(s||'card').replace(/[\\/:*?"<>|]/g,'_');
+$('bOne').onclick=async()=>{const d=selCard();download(await toBlob(cardCanvas(d,EXPORT_SCALE)),`card_${safe(d.name)}.png`);toast(tr('saved_one'))};
+$('bZip').onclick=async()=>{if(!window.JSZip){toast(tr('zip_fail'));return}
+  toast(tr('zip_making'));const z=new JSZip();
+  for(let i=0;i<cards.length;i++)z.file(`card_${String(i+1).padStart(2,'0')}_${safe(cards[i].name)}.png`,await toBlob(cardCanvas(cards[i],EXPORT_SCALE)));
+  download(await z.generateAsync({type:'blob'}),'pnc_cards.zip');toast(tr('zip_done',{n:cards.length}))};
+$('bList').onclick=async()=>{if(cards.length<2)return;download(await toBlob(listCanvas('wide')),'pnc_card_list.png');toast(tr('list_done'))};
+$('bHead').onclick=async()=>{if(cards.length<2||cards.length>6)return;download(await toBlob(listCanvas('header')),'pnc_card_header.png');toast(tr('head_done'))};
+
+/* 움직이는 저장 — 폰 화면에 꽉 차는 크기(카드 높이 약 900px), 배경을 깔아서 저장 */
+const ANIM_SCALE=1.9, ANIM_BG='#25282d', ANIM_FPS=15;
+let busy=false;
+$('bGif').onclick=async()=>{const d=selCard();if(!d.oath||busy)return;busy=true;
+  try{toast(tr('gif_making'));
+    const {GIFEncoder,quantize,applyPalette}=await import('https://cdn.jsdelivr.net/npm/gifenc@1.0.3/dist/gifenc.esm.js');
+    const frames=Math.round(LOOP*ANIM_FPS),gif=GIFEncoder();let w,h;
+    for(let i=0;i<frames;i++){const c=cardCanvas(d,ANIM_SCALE,i/frames*LOOP,ANIM_BG);w=c.width;h=c.height;
+      const data=c.getContext('2d').getImageData(0,0,w,h).data,pal=quantize(data,256),idx=applyPalette(data,pal);
+      gif.writeFrame(idx,w,h,{palette:pal,delay:Math.round(1000/ANIM_FPS)});if(i%5===4){toast(tr('gif_prog',{p:Math.round((i+1)/frames*100)}));await new Promise(r=>setTimeout(r))}}
+    gif.finish();download(new Blob([gif.bytes()],{type:'image/gif'}),`card_${safe(d.name)}.gif`);toast(tr('gif_done'));
+  }catch(e){toast(tr('gif_fail'))}finally{busy=false}};
+$('bMp4').onclick=async()=>{const d=selCard();if(!d.oath||busy)return;
+  if(!window.MediaRecorder){toast(tr('vid_no'));return}
+  const types=['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'],type=types.find(t=>MediaRecorder.isTypeSupported(t));
+  if(!type){toast(tr('vid_no'));return}
+  busy=true;toast(tr('vid_making'));
+  const c=cardCanvas(d,ANIM_SCALE,0,ANIM_BG),x=c.getContext('2d'),stream=c.captureStream(30),rec=new MediaRecorder(stream,{mimeType:type,videoBitsPerSecond:8e6}),chunks=[];
+  rec.ondataavailable=e=>e.data.size&&chunks.push(e.data);
+  rec.onstop=()=>{const mp4=type.startsWith('video/mp4');download(new Blob(chunks,{type}),`card_${safe(d.name)}.${mp4?'mp4':'webm'}`);
+    toast(mp4?tr('mp4_done'):tr('webm_done'));busy=false};
+  rec.start();const t0=performance.now(),dur=LOOP*2*1000;
+  (function tick(){const t=((performance.now()-t0)/1000)%LOOP;const f=cardCanvas(d,ANIM_SCALE,t,ANIM_BG);x.clearRect(0,0,c.width,c.height);x.drawImage(f,0,0);
+    if(performance.now()-t0<dur)requestAnimationFrame(tick);else rec.stop()})();
+};
+let tt;function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('on'),2400)}
+applyLang();
+
+/* ======================================================================
+   자동 저장 — 만든 카드(이미지 포함)를 이 브라우저 안에만 저장 (서버로 안 감)
+   ====================================================================== */
+const DB_NAME='pnc-card-maker',DB_STORE='state';let dirty=false,dbp=null;
+function db(){return dbp||(dbp=new Promise((ok,no)=>{try{const q=indexedDB.open(DB_NAME,1);q.onupgradeneeded=()=>q.result.createObjectStore(DB_STORE);q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)}catch(e){no(e)}}))}
+async function dbGet(){const d=await db();return new Promise((ok,no)=>{const q=d.transaction(DB_STORE).objectStore(DB_STORE).get('cards');q.onsuccess=()=>ok(q.result);q.onerror=()=>no(q.error)})}
+async function dbPut(v){const d=await db();return new Promise((ok,no)=>{const t=d.transaction(DB_STORE,'readwrite');t.objectStore(DB_STORE).put(v,'cards');t.oncomplete=ok;t.onerror=()=>no(t.error)})}
+async function dbClear(){const d=await db();return new Promise(ok=>{const t=d.transaction(DB_STORE,'readwrite');t.objectStore(DB_STORE).delete('cards');t.oncomplete=ok;t.onerror=ok})}
+const markDirty=()=>{dirty=true};
+['input','change','pointerup','wheel','click'].forEach(ev=>document.addEventListener(ev,markDirty,{passive:true,capture:true}));
+setInterval(async()=>{if(!dirty)return;dirty=false;
+  try{await dbPut({v:1,sel:cards.findIndex(c=>c.id===selId),cards:cards.map(c=>({name:c.name,cls:c.cls,company:c.company,power:c.power,engrave:c.engrave,oath:c.oath,fav:c.fav,comm:c.comm||'',zoom:c.zoom,ox:c.ox,oy:c.oy,src:c.src||null}))})}catch(e){}},1200);
+async function restore(){
+  try{const v=await dbGet();if(!v||!v.cards||!v.cards.length)return;
+    const list=await Promise.all(v.cards.slice(0,MAX_CARDS).map(o=>new Promise(ok=>{const c=newCard({name:o.name,cls:o.cls,company:o.company,power:o.power,engrave:o.engrave,oath:o.oath,fav:o.fav,comm:o.comm||'',zoom:o.zoom,ox:o.ox,oy:o.oy});
+      if(!o.src)return ok(c);const im=new Image();im.onload=()=>{c.img=im;c.src=o.src;ok(c)};im.onerror=()=>ok(c);im.src=o.src})));
+    cards.splice(0,cards.length,...list);selId=(cards[v.sel]||cards[0]).id;
+  }catch(e){}
+}
+let resetArm=0;
+$('bReset2').onclick=async()=>{const b=$('bReset2');
+  if(Date.now()-resetArm>3000){resetArm=Date.now();b.textContent=tr('reset_confirm');setTimeout(()=>{if(Date.now()-resetArm>=3000)b.textContent=tr('reset')},3100);return}
+  resetArm=0;b.textContent=tr('reset');await dbClear();cards.splice(0,cards.length,newCard({name:tr('default_name')}));selId=cards[0].id;build();fill();toast(tr('cleared'))};
+
+/* ======================================================================
+   사이트 테마 (밝음 / 회색 / 어두움)
+   ====================================================================== */
+const THEME_KEY='pnc-card-theme';
+function setTheme(th){document.documentElement.dataset.theme=th;document.querySelectorAll('[data-theme-btn]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeBtn===th)));try{localStorage.setItem(THEME_KEY,th)}catch(e){}}
+document.querySelectorAll('[data-theme-btn]').forEach(b=>b.addEventListener('click',()=>setTheme(b.dataset.themeBtn)));
+let savedTheme='dark';try{savedTheme=localStorage.getItem(THEME_KEY)||'dark'}catch(e){}
+setTheme(['light','grey','dark'].includes(savedTheme)?savedTheme:'dark');
+
+/* ======================================================================
+   공지 (취향픽 공지와 같은 동작)
+   ====================================================================== */
+(()=>{
+  const NOTICE_VERSION=1, STORE_KEY='pnc-card-notice';
+  const TEXT={
+    ko:{title:'공지',hide:'다음부터 보지 않기',ok:'확인',notice:[
+      '소녀전선: 뉴럴 클라우드의 인형 목록 카드를 내 마음대로 만들어 저장할 수 있는 사이트입니다.',
+      '최고 스펙(5성 · 레벨 70 · 한계 돌파 6칸)을 기준으로 제작되었습니다.',
+      '바이브 코딩으로 제작한 팬메이드 사이트이며, 모든 권리는 선본 네트워크(Sunborn Network Technology Co., Ltd.)와 미카팀(MICA Team)에 있습니다.',
+      '카드에 쓰인 대부분의 요소는 원본을 참고해 코드로 다시 그렸지만, 원본 디자인과 소스의 권리는 선본 네트워크와 미카팀에 있습니다.',
+      '오류 등의 사항은 X @BPT2xNoa 로 연락 부탁드리겠습니다. 감사합니다.','---',
+      '· 캐릭터 이미지는 직접 넣어 주세요. 카드 위에서 끌면 위치가, 마우스 휠이나 두 손가락으로 크기가 바뀝니다.',
+      '· 카드는 최대 12장까지 만들 수 있습니다.',
+      '· 즐겨찾기한 카드는 앞쪽에 고정되며, 같은 묶음 안에서 끌어서 순서를 바꿀 수 있습니다.',
+      '· 카드 왼쪽 위의 ★ 표시는 사이트 화면에서만 보이며, 저장한 이미지에는 나오지 않습니다.',
+      '· 이름에 한글 사이 하이픈(-)을 넣으면 가운뎃점(·)으로 바뀝니다. (예: 페르시카-집도 → 페르시카·집도)',
+      '· 서약 카드는 GIF · MP4로 반짝이는 모습 그대로 저장할 수 있습니다.',
+      '· 넣은 이미지는 어디에도 올라가지 않고, 내 기기 안에서만 처리됩니다.','---',
+      '모쪼록 즐겨주시길 바랍니다. 감사합니다.'],
+      updates:[['2026.10.22','소녀전선: 뉴럴 클라우드 인형증을 열었습니다.']]},
+    en:{title:'Notice',hide:"Don't show again",ok:'Done',notice:[
+      "A site for making and saving your own Doll list cards from Girls' Frontline: Neural Cloud.",
+      'Cards are made at max spec (5★ · Lv. 70 · 6 Limit Ups).',
+      'This is a fan-made site built with vibe coding. All rights belong to Sunborn Network Technology Co., Ltd. and MICA Team.',
+      'Most card elements were redrawn in code based on the originals, but the original designs and assets belong to Sunborn Network and MICA Team.',
+      'For bugs or issues, please contact X @BPT2xNoa. Thank you.','---',
+      '· Add your own character image. Drag on the card to move it; use the mouse wheel or two fingers to resize.',
+      '· You can make up to 12 cards.',
+      '· Favorited cards stay at the front. You can drag to reorder cards within the same group.',
+      "· The ★ mark on a card's top-left corner only shows on this site; it is not included in saved images.",
+      '· A hyphen (-) between Korean letters in a name turns into a middle dot (·).',
+      '· Oath cards can be saved as GIF or MP4 with their sparkles.',
+      '· Your images are never uploaded; everything stays on your device.','---',
+      'We hope you enjoy it. Thank you.'],
+      updates:[['2026.10.22',"GIRLS' FRONTLINE //:_ NEURAL CLOUD Doll ID is now open."]]},
+    zh:{title:'公告',hide:'不再显示',ok:'确定',notice:[
+      '这是一个可以自由制作并保存《少女前线: 云图计划》人形列表卡片的网站。',
+      '卡片以最高规格（5星 · 等级 70 · 突破 6 格）为准制作。',
+      '本站为使用 vibe coding 制作的粉丝自制网站，所有权利归散爆网络（Sunborn Network Technology Co., Ltd.）与 MICA Team 所有。',
+      '卡片上的大部分元素是参考原版用代码重新绘制的，但原版设计与素材的权利归散爆网络与 MICA Team 所有。',
+      '如有错误等问题，请通过 X @BPT2xNoa 联系。谢谢。','---',
+      '· 角色图片请自行放入。在卡片上拖动可调整位置，用鼠标滚轮或双指可调整大小。',
+      '· 最多可以制作 12 张卡片。',
+      '· 收藏的卡片会固定在前面，同一组内可以拖动调整顺序。',
+      '· 卡片左上角的 ★ 标记只在本站画面中显示，不会出现在保存的图片里。',
+      '· 名字中韩文之间的连字符（-）会变成间隔号（·）。',
+      '· 誓约卡片可以保存为带闪光效果的 GIF · MP4。',
+      '· 放入的图片不会上传到任何地方，只在你的设备中处理。','---',
+      '希望大家玩得开心。谢谢。'],
+      updates:[['2026.10.22','少女前线: 云图计划 人形证正式上线。']]},
+    ja:{title:'お知らせ',hide:'次から表示しない',ok:'決定',notice:[
+      'ドールズフロントライン: ニューラルクラウドの人形リストカードを自由に作って保存できるサイトです。',
+      '最高スペック（★5 · Lv.70 · 限界突破6段階）を基準に制作しています。',
+      'バイブコーディングで制作したファンメイドサイトで、すべての権利は Sunborn Network Technology Co., Ltd. と MICA Team に帰属します。',
+      'カードの多くの要素は原作を参考にコードで描き直していますが、原作デザインと素材の権利は Sunborn Network と MICA Team にあります。',
+      '不具合などは X @BPT2xNoa までご連絡ください。ありがとうございます。','---',
+      '· キャラクター画像はご自身で入れてください。カードの上でドラッグすると位置を、マウスホイールや2本指で大きさを変えられます。',
+      '· カードは最大12枚まで作れます。',
+      '· お気に入りのカードは前に固定され、同じグループ内ならドラッグで順番を変えられます。',
+      '· カード左上の ★ マークはサイト画面でのみ表示され、保存した画像には出ません。',
+      '· 名前のハングルの間のハイフン（-）は中黒（·）に変わります。',
+      '· 誓約カードはキラキラしたまま GIF · MP4 で保存できます。',
+      '· 入れた画像はどこにもアップロードされず、端末の中だけで処理されます。','---',
+      '楽しんでいただけたら嬉しいです。ありがとうございます。'],
+      updates:[['2026.10.22','ドールズフロントライン: ニューラルクラウド 人形証を公開しました。']]}
+  };
+  const UPDATES_TITLE='업데이트 / Updates / 更新';
+  const load=()=>{try{return JSON.parse(localStorage.getItem(STORE_KEY)||'{}')}catch(e){return{}}};
+  const save=o=>{try{localStorage.setItem(STORE_KEY,JSON.stringify(o))}catch(e){}};
+  const guess=()=>{const l=(navigator.language||'ko').toLowerCase();return l.startsWith('ja')?'ja':l.startsWith('zh')?'zh':l.startsWith('ko')?'ko':'en'};
+  let lang=TEXT[LANG]?LANG:guess();window.noticeLang=l=>{if(TEXT[l]){lang=l;render()}};
+  function render(){const t=TEXT[lang]||TEXT.ko;$('pnTitle').textContent=t.title;$('pnHideLabel').textContent=t.hide;$('pnOk').textContent=t.ok;
+    document.querySelectorAll('#pnPop [data-lang]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.lang===lang)));
+    const parts=t.notice.map(line=>{if(line==='---')return document.createElement('hr');const p=document.createElement('p');p.textContent=line;return p});
+    const ups=t.updates||TEXT.ko.updates||[];
+    if(ups.length){const d=document.createElement('details');d.className='pn-updates';const sm=document.createElement('summary');sm.textContent=UPDATES_TITLE;const ul=document.createElement('ul');
+      ups.forEach(([date,text])=>{const li=document.createElement('li');const dt=document.createElement('span');dt.className='pn-date';dt.textContent=date;li.append(dt,document.createTextNode(text));ul.append(li)});
+      d.append(sm,ul);parts.push(document.createElement('hr'),d)}
+    $('pnBody').replaceChildren(...parts)}
+  function open(){$('pnHide').checked=load().hidden===NOTICE_VERSION;$('pnPop').hidden=false}
+  function close(){const o=load();o.hidden=$('pnHide').checked?NOTICE_VERSION:0;save(o);$('pnPop').hidden=true}
+  document.querySelectorAll('#pnPop [data-lang]').forEach(b=>b.addEventListener('click',()=>setLang(b.dataset.lang)));   // 공지 언어를 바꾸면 사이트 전체 언어도 같이 바뀜
+  $('pnOpen').addEventListener('click',open);$('pnOk').addEventListener('click',close);$('pnClose').addEventListener('click',close);
+  $('pnPop').addEventListener('click',e=>{if(e.target.id==='pnPop')close()});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('pnPop').hidden)close()});
+  render();if(load().hidden!==NOTICE_VERSION)open();
+})();
+
+/* ======================================================================
+   시작
+   ====================================================================== */
+(async()=>{
+  await Promise.all(Object.entries(SRC).map(async([k,v])=>{IMG[k]=await load(v)}));
+  const Q=4; // 벡터 그림은 4배 비트맵으로 바꿔서 씀 (저장 2배·움직이는 저장 1.9배보다 큼)
+  IMG.plateR=raster(IMG.plate,CW*Q,CH*Q);IMG.maskR=raster(IMG.mask,IMG_R.w*Q,IMG_R.h*Q);
+  IMG.limitR=raster(IMG.limit,97*Q,100*Q);IMG.starR=raster(IMG.star,24*Q,24*Q);
+  IMG.engOnR=raster(IMG.engOn,76*Q,76*Q);IMG.engOffR=raster(IMG.engOff,76*Q,76*Q);
+  IMG.nameR=raster(IMG.name,225*Q,50*Q);IMG.nameFavR=raster(IMG.nameFav,225*Q,50*Q);
+  IMG.powerR=raster(IMG.power,256,256);IMG.frameR=raster(IMG.oathFrame,FRAME.w*Q,FRAME.h*Q);IMG.whiteR=raster(IMG.oathWhite,FRAME.w*Q,FRAME.h*Q);
+  IMG.heart=raster(IMG.heartSvg,64*Q,60*Q);
+  IMG.badgeR=raster(IMG.oathBadge,IMG.oathBadge.width*4,IMG.oathBadge.height*4);
+  IMG.titleD=tint(IMG.title,'#3c4046');IMG.codeD=tint(IMG.code,'#3c4046');IMG.squaresD=tint(IMG.squares,'#3c4046');
+  for(const k of ['42lab','svarog','ultilife','uas','entropy','cybermedia','alternatives','purifier'])IMG['t_'+k]=tint(IMG[k],'rgb(70,76,84)');
+  try{await Promise.all([`86px ${NUM_FONT}`,`27px ${NAME_FONT}`,'500 13px "Noto Sans KR"'].map(f=>document.fonts.load(f,'70스에')))}catch(e){}
+  await restore();
+  build();fill();requestAnimationFrame(frame);
+})().catch(e=>{document.body.insertAdjacentHTML('afterbegin',`<p style="padding:16px;color:#f88">${tr('load_fail',{e})}</p>`)});
+</script>
+</body>
+</html>

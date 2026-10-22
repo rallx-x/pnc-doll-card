@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 810 629" width="810" height="629">
+  <!-- 카드용 서약 배지: 1단계(전부 이어진 모양)에서 원본의 빈 자리만 지움 -->
+  <defs>
+    <path id="gem" d="M261.5,158.6 H547.5 L666.2,287.6 L404.5,527.7 L142.8,287.6 Z"/>
+    <!-- 지울 모양: 보석 모양 그대로, 테두리 G만큼 똑같이 띄움 -->
+    <path id="knock" d="M261.5,158.6 H547.5 L666.2,287.6 L404.5,527.7 L142.8,287.6 Z"/>
+    <clipPath id="bottom"><rect x="264.5" y="494" width="280" height="200"/></clipPath>
+    <mask id="mL" maskUnits="userSpaceOnUse" x="0" y="0" width="810" height="629">
+      <rect width="810" height="629" fill="#fff"/>
+      <use href="#knock" fill="#000" stroke="#000" stroke-width="56.0" stroke-linejoin="miter" stroke-miterlimit="10"/>
+      <rect x="191.5" y="130.6" width="426.0" height="157.00000000000003" fill="#000"/>
+    </mask>
+    <!-- 오른쪽 반지는 아래 교차점에서 왼쪽 반지 밑으로: 왼쪽 반지 띠 양옆으로 같은 G만큼 띄움 -->
+    <mask id="mR" maskUnits="userSpaceOnUse" x="0" y="0" width="810" height="629">
+      <rect width="810" height="629" fill="#fff"/>
+      <use href="#knock" fill="#000" stroke="#000" stroke-width="56.0" stroke-linejoin="miter" stroke-miterlimit="10"/>
+      <rect x="191.5" y="130.6" width="426.0" height="157.00000000000003" fill="#000"/>
+      <g clip-path="url(#bottom)"><ellipse cx="308" cy="314" rx="283.5" ry="290.5" fill="none" stroke="#000" stroke-width="103.0"/></g>
+    </mask>
+    <mask id="mG" maskUnits="userSpaceOnUse" x="0" y="0" width="810" height="629">
+      <rect width="810" height="629" fill="#fff"/><path d="M404.5,217.7 Q421.7,286.5 490.5,303.7 Q421.7,320.9 404.5,389.7 Q387.3,320.9 318.5,303.7 Q387.3,286.5 404.5,217.7 Z" fill="#000"/>
+    </mask>
+  </defs>
+  <g fill="none" stroke="currentColor" stroke-width="47">
+    <ellipse cx="308" cy="314" rx="283.5" ry="290.5" mask="url(#mL)"/>
+    <ellipse cx="501" cy="314" rx="283.5" ry="290.5" mask="url(#mR)"/>
+  </g>
+  <use href="#gem" fill="currentColor" mask="url(#mG)"/>
+</svg>
